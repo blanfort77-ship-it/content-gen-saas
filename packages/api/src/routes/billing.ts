@@ -22,17 +22,21 @@ billingRouter.post("/v1/signup", async (req, res) => {
     return;
   }
 
-  const customer = await stripe.customers.create({ email });
+  try {
+    const customer = await stripe.customers.create({ email });
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    customer: customer.id,
-    line_items: [{ price: config.plans[plan as PlanName].priceId, quantity: 1 }],
-    success_url: `${config.publicUrl}/v1/onboard?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${config.publicUrl}/v1/signup/cancelled`,
-  });
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customer.id,
+      line_items: [{ price: config.plans[plan as PlanName].priceId, quantity: 1 }],
+      success_url: `${config.publicUrl}/v1/onboard?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${config.publicUrl}/v1/signup/cancelled`,
+    });
 
-  res.json({ checkoutUrl: session.url });
+    res.json({ checkoutUrl: session.url });
+  } catch (err) {
+    res.status(502).json({ error: "Signup failed.", detail: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 // Success-redirect landing: looks up the account the webhook provisioned and
@@ -45,24 +49,28 @@ billingRouter.get("/v1/onboard", async (req, res) => {
     return;
   }
 
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
-  const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
-  if (!customerId) {
-    res.status(400).json({ error: "Checkout session has no associated customer." });
-    return;
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
+    if (!customerId) {
+      res.status(400).json({ error: "Checkout session has no associated customer." });
+      return;
+    }
+
+    const user = await db.user.findUnique({
+      where: { stripeCustomerId: customerId },
+      include: { apiKeys: { orderBy: { createdAt: "desc" }, take: 1 } },
+    });
+
+    if (!user || user.apiKeys.length === 0) {
+      res.status(202).json({ status: "provisioning", message: "Still setting up your account, retry in a few seconds." });
+      return;
+    }
+
+    res.json({ apiKey: user.apiKeys[0].key });
+  } catch (err) {
+    res.status(502).json({ error: "Onboarding lookup failed.", detail: err instanceof Error ? err.message : String(err) });
   }
-
-  const user = await db.user.findUnique({
-    where: { stripeCustomerId: customerId },
-    include: { apiKeys: { orderBy: { createdAt: "desc" }, take: 1 } },
-  });
-
-  if (!user || user.apiKeys.length === 0) {
-    res.status(202).json({ status: "provisioning", message: "Still setting up your account, retry in a few seconds." });
-    return;
-  }
-
-  res.json({ apiKey: user.apiKeys[0].key });
 });
 
 // Returns a Stripe-hosted billing portal link for the authenticated customer
@@ -74,10 +82,14 @@ billingRouter.get("/v1/portal", async (req, res) => {
     return;
   }
 
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: config.publicUrl,
-  });
+  try {
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: config.publicUrl,
+    });
 
-  res.json({ portalUrl: portalSession.url });
+    res.json({ portalUrl: portalSession.url });
+  } catch (err) {
+    res.status(502).json({ error: "Portal session failed.", detail: err instanceof Error ? err.message : String(err) });
+  }
 });
