@@ -1,7 +1,10 @@
 import "dotenv/config";
 
 function required(name: string): string {
-  const value = process.env[name];
+  // Trim defensively: env var UIs (including Render's) can pick up a
+  // trailing newline/space from copy-paste, which passes through fine as an
+  // env var but breaks Node's raw HTTP header validation downstream.
+  const value = process.env[name]?.trim();
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
