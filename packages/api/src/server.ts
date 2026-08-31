@@ -3,6 +3,7 @@ import { config } from "./config.js";
 import { webhookRouter } from "./routes/webhook.js";
 import { billingRouter } from "./routes/billing.js";
 import { generateRouter } from "./routes/generate.js";
+import { siteRouter } from "./routes/site.js";
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(webhookRouter);
 
 app.use(express.json());
 app.get("/health", (_req, res) => res.json({ ok: true }));
+app.use(siteRouter);
 app.use(billingRouter);
 app.use(generateRouter);
 
