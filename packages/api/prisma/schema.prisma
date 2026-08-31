@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  stripeCustomerId String        @unique
+  createdAt        DateTime      @default(now())
+  apiKeys          ApiKey[]
+  subscriptions    Subscription[]
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
+}
+
+enum Plan {
+  STARTER
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Subscription {
+  id                   String              @id @default(uuid())
+  userId               String
+  user                 User                @relation(fields: [userId], references: [id])
+  stripeSubscriptionId String              @unique
+  plan                 Plan
+  status               SubscriptionStatus
+  currentPeriodEnd     DateTime
+  usageCounters        UsageCounter[]
+}
+
+// One row per (subscription, billing period). `period` is the Stripe
+// current_period_start timestamp, used as a stable key for the active cycle.
+model UsageCounter {
+  id             String       @id @default(uuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  period         DateTime
+  count          Int          @default(0)
+
+  @@unique([subscriptionId, period])
+}
