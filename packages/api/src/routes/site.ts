@@ -22,7 +22,7 @@ const page = (title: string, body: string) => `<!DOCTYPE html>
 ${body}
 <footer>
   <p>content-gen is a product of United Surface Coatings, LLC. Contact: <a href="mailto:blanfort77@gmail.com">blanfort77@gmail.com</a></p>
-  <p><a href="/">Home</a> · <a href="/privacy">Privacy Policy</a> · <a href="/support">Support</a></p>
+  <p><a href="/">Home</a> · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a> · <a href="/support">Support</a></p>
 </footer>
 </body>
 </html>`;
@@ -71,6 +71,33 @@ siteRouter.get("/privacy", (_req, res) => {
 
     <h2>Contact</h2>
     <p>Questions about this policy: <a href="mailto:blanfort77@gmail.com">blanfort77@gmail.com</a></p>
+  `
+    )
+  );
+});
+
+siteRouter.get("/terms", (_req, res) => {
+  res.type("html").send(
+    page(
+      "Terms of Service",
+      `
+    <h1>Terms of Service</h1>
+    <p>Last updated: ${new Date().toISOString().slice(0, 10)}</p>
+
+    <h2>Service</h2>
+    <p>content-gen provides an API for generating text content (blog posts, social media captions, marketing copy) using AI. Access is provided on a monthly subscription basis (Starter or Pro plan), each with a fixed monthly generation quota.</p>
+
+    <h2>Billing</h2>
+    <p>Subscriptions are billed monthly in advance via Stripe and renew automatically until cancelled. You can cancel at any time through the billing portal; access continues until the end of the current billing period.</p>
+
+    <h2>Acceptable use</h2>
+    <p>You are responsible for the content you generate and how you use it. Do not use the service to generate illegal, infringing, or abusive content.</p>
+
+    <h2>Availability</h2>
+    <p>The service is provided "as is" without warranty of any kind. We do not guarantee uninterrupted availability.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about these terms: <a href="mailto:blanfort77@gmail.com">blanfort77@gmail.com</a></p>
   `
     )
   );
