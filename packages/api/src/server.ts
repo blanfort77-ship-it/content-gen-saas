@@ -12,6 +12,17 @@ app.use(webhookRouter);
 
 app.use(express.json());
 app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// TEMPORARY diagnostic — never returns the key itself, only structural info
+// (length + positions/codes of non-printable-ASCII characters), to debug a
+// persistent ERR_INVALID_CHAR on the Stripe Authorization header.
+app.get("/v1/debug/stripe-key-check", (_req, res) => {
+  const key = config.stripeSecretKey;
+  const suspicious = [...key]
+    .map((ch, i) => ({ i, code: ch.charCodeAt(0) }))
+    .filter((c) => c.code < 33 || c.code > 126);
+  res.json({ length: key.length, suspiciousChars: suspicious });
+});
 app.use(billingRouter);
 app.use(generateRouter);
 
