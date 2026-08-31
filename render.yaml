@@ -3,7 +3,6 @@ services:
     name: content-gen-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: starter
     envVars:
       - key: PORT
         value: 3000
@@ -26,4 +25,3 @@ services:
 
 databases:
   - name: content-gen-db
-    plan: starter
