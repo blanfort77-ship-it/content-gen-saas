@@ -35,6 +35,7 @@ billingRouter.post("/v1/signup", async (req, res) => {
 
     res.json({ checkoutUrl: session.url });
   } catch (err) {
+    console.error(err);
     res.status(502).json({ error: "Signup failed.", detail: err instanceof Error ? err.message : String(err) });
   }
 });
@@ -69,6 +70,7 @@ billingRouter.get("/v1/onboard", async (req, res) => {
 
     res.json({ apiKey: user.apiKeys[0].key });
   } catch (err) {
+    console.error(err);
     res.status(502).json({ error: "Onboarding lookup failed.", detail: err instanceof Error ? err.message : String(err) });
   }
 });
@@ -90,6 +92,7 @@ billingRouter.get("/v1/portal", async (req, res) => {
 
     res.json({ portalUrl: portalSession.url });
   } catch (err) {
+    console.error(err);
     res.status(502).json({ error: "Portal session failed.", detail: err instanceof Error ? err.message : String(err) });
   }
 });

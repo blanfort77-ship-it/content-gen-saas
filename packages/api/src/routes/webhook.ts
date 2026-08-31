@@ -93,6 +93,7 @@ webhookRouter.post("/v1/stripe/webhook", raw({ type: "application/json" }), asyn
 
     res.json({ received: true });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Webhook handling failed.", detail: err instanceof Error ? err.message : String(err) });
   }
 });
