@@ -173,6 +173,19 @@ async function handleUpdate(update: TelegramUpdate) {
 resumeCheckTelegramRouter.post("/telegram/resume-check", (req, res) => {
   const secretHeader = req.header("x-telegram-bot-api-secret-token") ?? "";
   if (!config.resumeCheckTelegramWebhookSecret || secretHeader !== config.resumeCheckTelegramWebhookSecret) {
+    // TEMPORARY diagnostic - lengths/prefixes only, never full values.
+    console.error(
+      "resume-check auth mismatch:",
+      JSON.stringify({
+        receivedLen: secretHeader.length,
+        receivedFirst4: secretHeader.slice(0, 4),
+        receivedLast4: secretHeader.slice(-4),
+        expectedLen: config.resumeCheckTelegramWebhookSecret?.length ?? 0,
+        expectedFirst4: config.resumeCheckTelegramWebhookSecret?.slice(0, 4) ?? null,
+        expectedLast4: config.resumeCheckTelegramWebhookSecret?.slice(-4) ?? null,
+        allHeaderKeys: Object.keys(req.headers),
+      })
+    );
     res.status(401).json({ error: "Invalid or missing webhook secret" });
     return;
   }
