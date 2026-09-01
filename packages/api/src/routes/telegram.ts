@@ -14,11 +14,11 @@ const AUDIT_PRICE_STARS = 15; // ~$0.15-0.20 net after Telegram/Fragment fees.
 const PENDING_DRAFT_TTL_MS = 30 * 60 * 1000; // 30 minutes.
 
 const WELCOME_TEXT =
-  "Send me a draft — an article, code, or report — and I'll audit it for accuracy before you publish it. " +
+  "Send me a draft - an article, code, or report - and I'll audit it for accuracy before you publish it. " +
   `Each audit costs ${AUDIT_PRICE_STARS} Telegram Stars, paid through Telegram's own payment flow. ` +
   "I inventory every verifiable claim, check internal consistency and code logic by reasoning through it, " +
   "and flag anything that would need external verification instead of guessing. " +
-  "No live web access or code execution in this version — I'll say so explicitly when I can't check something here.";
+  "No live web access or code execution in this version - I'll say so explicitly when I can't check something here.";
 
 interface TelegramSuccessfulPayment {
   invoice_payload: string;
@@ -59,11 +59,18 @@ function pruneExpiredDrafts() {
 }
 
 async function telegramApi(method: string, body: unknown) {
-  await fetch(`${TELEGRAM_API}/bot${config.telegramBotToken}/${method}`, {
+  const res = await fetch(`${TELEGRAM_API}/bot${config.telegramBotToken}/${method}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  if (!res.ok) {
+    // Never fail silently: a rejected Telegram API call previously meant
+    // the user just saw nothing happen, with no trace in the logs either.
+    const errorBody = await res.text();
+    console.error(`Telegram API ${method} failed (${res.status}): ${errorBody}`);
+  }
+  return res;
 }
 
 async function sendTelegramMessage(chatId: number, text: string) {
@@ -84,7 +91,7 @@ async function sendAuditInvoice(chatId: number, payloadId: string) {
   await telegramApi("sendInvoice", {
     chat_id: chatId,
     title: "Second Pass Audit",
-    description: "Accuracy audit for your draft — checks every verifiable claim before you publish it.",
+    description: "Accuracy audit for your draft: checks every verifiable claim before you publish it.",
     payload: payloadId,
     currency: "XTR",
     prices: [{ label: "Audit", amount: AUDIT_PRICE_STARS }],
@@ -109,7 +116,7 @@ async function runAudit(chatId: number, draftText: string) {
       .join("\n")
       .trim();
 
-    await sendTelegramMessage(chatId, auditText || "Audit produced no output — try again.");
+    await sendTelegramMessage(chatId, auditText || "Audit produced no output - try again.");
   } catch (err) {
     await sendTelegramMessage(
       chatId,
@@ -127,7 +134,7 @@ async function handlePreCheckoutQuery(query: TelegramPreCheckoutQuery) {
       : {
           pre_checkout_query_id: query.id,
           ok: false,
-          error_message: "This audit request expired — please send your draft again.",
+          error_message: "This audit request expired - please send your draft again.",
         }
   );
 }
@@ -139,7 +146,7 @@ async function handleMessage(message: TelegramMessage) {
     const draft = pendingDrafts.get(message.successful_payment.invoice_payload);
     pendingDrafts.delete(message.successful_payment.invoice_payload);
     if (!draft) {
-      await sendTelegramMessage(chatId, "Payment received, but I lost track of your draft — please resend it.");
+      await sendTelegramMessage(chatId, "Payment received, but I lost track of your draft - please resend it.");
       return;
     }
     await runAudit(chatId, draft.text);
