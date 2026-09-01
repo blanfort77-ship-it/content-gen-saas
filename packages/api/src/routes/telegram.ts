@@ -189,5 +189,11 @@ telegramRouter.post("/telegram/second-pass", (req, res) => {
   // responding rather than blocking on it.
   res.status(200).json({ ok: true });
 
-  void handleUpdate(req.body as TelegramUpdate);
+  // Never let a rejected promise here go unhandled — an uncaught network
+  // error (e.g. a transient DNS/IPv6 route failure calling Telegram's API)
+  // previously crashed the whole process, taking down every other route
+  // (including paid content-gen traffic) along with this one bot.
+  handleUpdate(req.body as TelegramUpdate).catch((err) => {
+    console.error("Unhandled error in telegram second-pass handler:", err);
+  });
 });

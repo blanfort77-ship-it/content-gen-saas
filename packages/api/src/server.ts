@@ -9,6 +9,13 @@ import { telegramRouter } from "./routes/telegram.js";
 import { resumeCheckPoeRouter } from "./routes/resumeCheckPoe.js";
 import { resumeCheckTelegramRouter } from "./routes/resumeCheckTelegram.js";
 
+// Defense in depth, on top of the .catch() on every fire-and-forget handler:
+// one uncaught rejection anywhere must never take down paid content-gen
+// traffic along with whichever bot triggered it. Log and keep running.
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection (process kept alive):", reason);
+});
+
 const app = express();
 
 // Must be mounted before express.json() — Stripe webhook signature
@@ -17,26 +24,6 @@ app.use(webhookRouter);
 
 app.use(express.json());
 app.get("/health", (_req, res) => res.json({ ok: true }));
-// TEMPORARY diagnostic — reports whether env vars are loaded and their
-// length only, never the value. Same technique used earlier to root-cause
-// a Render secret-corruption bug; remove once this is resolved.
-app.get("/debug/env-check", (_req, res) => {
-  res.json({
-    resumeCheckTelegramWebhookSecret: {
-      set: Boolean(config.resumeCheckTelegramWebhookSecret),
-      length: config.resumeCheckTelegramWebhookSecret?.length ?? 0,
-      firstChars: config.resumeCheckTelegramWebhookSecret?.slice(0, 4) ?? null,
-    },
-    resumeCheckTelegramBotToken: {
-      set: Boolean(config.resumeCheckTelegramBotToken),
-      length: config.resumeCheckTelegramBotToken?.length ?? 0,
-    },
-    resumeCheckPoeAccessKey: {
-      set: Boolean(config.resumeCheckPoeAccessKey),
-      length: config.resumeCheckPoeAccessKey?.length ?? 0,
-    },
-  });
-});
 app.use(siteRouter);
 app.use(billingRouter);
 app.use(generateRouter);
