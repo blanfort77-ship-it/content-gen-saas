@@ -21,6 +21,11 @@ export const config = {
   // Optional, not required: the Poe bridge route rejects requests with 401
   // if this isn't set, rather than crashing the whole API on boot.
   poeAccessKey: process.env.POE_ACCESS_KEY?.trim(),
+  // Same pattern for the Telegram bridge: bot token to call the Telegram
+  // Bot API, and a webhook secret we choose ourselves and verify on every
+  // incoming request. Neither is required at boot.
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN?.trim(),
+  telegramWebhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET?.trim(),
   plans: {
     STARTER: {
       priceId: required("STRIPE_PRICE_STARTER"),

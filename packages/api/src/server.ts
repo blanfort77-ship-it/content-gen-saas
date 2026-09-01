@@ -5,6 +5,7 @@ import { billingRouter } from "./routes/billing.js";
 import { generateRouter } from "./routes/generate.js";
 import { siteRouter } from "./routes/site.js";
 import { poeRouter } from "./routes/poe.js";
+import { telegramRouter } from "./routes/telegram.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(siteRouter);
 app.use(billingRouter);
 app.use(generateRouter);
 app.use(poeRouter);
+app.use(telegramRouter);
 
 app.listen(config.port, () => {
   console.log(`content-gen API listening on port ${config.port}`);
