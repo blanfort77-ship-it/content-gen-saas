@@ -26,6 +26,11 @@ export const config = {
   // incoming request. Neither is required at boot.
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN?.trim(),
   telegramWebhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET?.trim(),
+  // Second bot, same two bridge patterns, separate credentials since it's a
+  // distinct Poe/Telegram bot with its own identity and pricing.
+  resumeCheckPoeAccessKey: process.env.RESUME_CHECK_POE_ACCESS_KEY?.trim(),
+  resumeCheckTelegramBotToken: process.env.RESUME_CHECK_TELEGRAM_BOT_TOKEN?.trim(),
+  resumeCheckTelegramWebhookSecret: process.env.RESUME_CHECK_TELEGRAM_WEBHOOK_SECRET?.trim(),
   plans: {
     STARTER: {
       priceId: required("STRIPE_PRICE_STARTER"),
