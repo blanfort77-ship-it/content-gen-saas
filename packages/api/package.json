@@ -13,6 +13,7 @@
     "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
     "@content-gen/core": "*",
     "@prisma/client": "^5.20.0",
     "express": "^4.21.0",

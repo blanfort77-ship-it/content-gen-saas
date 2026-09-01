@@ -18,6 +18,9 @@ export const config = {
   stripeWebhookSecret: required("STRIPE_WEBHOOK_SECRET"),
   databaseUrl: required("DATABASE_URL"),
   publicUrl: process.env.PUBLIC_URL ?? "http://localhost:3000",
+  // Optional, not required: the Poe bridge route rejects requests with 401
+  // if this isn't set, rather than crashing the whole API on boot.
+  poeAccessKey: process.env.POE_ACCESS_KEY?.trim(),
   plans: {
     STARTER: {
       priceId: required("STRIPE_PRICE_STARTER"),
